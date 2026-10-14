@@ -6,6 +6,17 @@ import { lessons as lessonData } from './data/lessons.js'
 
 const lessons = ref(lessonData)
 
+
+const cart = ref([])
+
+function addToCart(lesson) {
+  if (lesson.spaces > 0) {
+    cart.value.push(lesson.id)
+    lesson.spaces--
+  }
+}
+
+
 const sortBy = ref('subject')
 const sortOrder = ref('asc')
 
@@ -36,7 +47,7 @@ const sortedLessons = computed(() => {
 <template>
   <header class="header">
     <h1>BrightPath Academy</h1>
-    <span>Cart (0)</span>
+    <span>Cart ({{ cart.length }})</span>
   </header>
 
   <main class="container">
@@ -73,6 +84,15 @@ const sortedLessons = computed(() => {
         :lesson="lesson"
       />
     </div>
+
+    
+<LessonCard
+  v-for="lesson in sortedLessons"
+  :key="lesson.id"
+  :lesson="lesson"
+  @add-to-cart="addToCart"
+/>
+
   </main>
 </template>
 

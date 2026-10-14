@@ -3,6 +3,7 @@
 defineProps({
   lesson: Object
 })
+const emit = defineEmits(['add-to-cart'])
 </script>
 
 <template>
@@ -26,9 +27,13 @@ defineProps({
       <div class="lesson-bottom">
         <strong>£{{ lesson.price }}</strong>
 
-        <button :disabled="lesson.spaces === 0">
-          Add to Cart
-        </button>
+<button
+  :disabled="lesson.spaces === 0"
+  @click="emit('add-to-cart', lesson)"
+>
+  {{ lesson.spaces === 0 ? 'Full' : 'Add to Cart' }}
+</button>
+
       </div>
     </div>
 
