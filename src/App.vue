@@ -77,21 +77,28 @@ const sortedLessons = computed(() => {
 </div>
 
 
-    <div class="lesson-grid">
-      <LessonCard
-        v-for="lesson in sortedLessons"
-        :key="lesson.id"
-        :lesson="lesson"
-      />
-    </div>
+
+<div class="lesson-grid">
+  <LessonCard
+    v-for="lesson in sortedLessons"
+    :key="lesson.id"
+    :lesson="lesson"
+    @add-to-cart="addToCart"
+  />
+</div>
+
 
     
-<LessonCard
-  v-for="lesson in sortedLessons"
-  :key="lesson.id"
-  :lesson="lesson"
-  @add-to-cart="addToCart"
-/>
+
+<div class="lesson-grid">
+  <LessonCard
+    v-for="lesson in sortedLessons"
+    :key="lesson.id"
+    :lesson="lesson"
+    @add-to-cart="addToCart"
+  />
+</div>
+
 
   </main>
 </template>
