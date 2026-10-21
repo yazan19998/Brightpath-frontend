@@ -14,6 +14,14 @@ const customerName = ref('')
 const customerPhone = ref('')
 const orderSubmitted = ref(false)
 
+const customerEmail = ref('')
+const customerAddress = ref('')
+const customerCity = ref('')
+const customerPostcode = ref('')
+const customerCountry = ref('United Kingdom')
+const studentName = ref('')
+
+
 
 
 const showCart = ref(false)
@@ -48,17 +56,28 @@ function removeFromCart(index) {
 
 
 
-const validName = computed(() => {
-  return /^[A-Za-z ]+$/.test(customerName.value.trim())
+
+const validEmail = computed(() => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.value.trim())
 })
 
-const validPhone = computed(() => {
-  return /^[0-9]+$/.test(customerPhone.value)
+const validAddress = computed(() => {
+  return customerAddress.value.trim() !== '' &&
+         customerCity.value.trim() !== '' &&
+         customerPostcode.value.trim() !== '' &&
+         customerCountry.value !== ''
+})
+
+const validStudent = computed(() => {
+  return /^[A-Za-z ]+$/.test(studentName.value.trim())
 })
 
 const canCheckout = computed(() => {
   return validName.value &&
          validPhone.value &&
+         validEmail.value &&
+         validAddress.value &&
+         validStudent.value &&
          cart.value.length > 0
 })
 
@@ -167,13 +186,16 @@ const sortedLessons = computed(() => {
   </div>
 
   
+
 <div class="checkout-section">
 
-  <h2>Checkout</h2>
-  <p>Enter your details to complete your booking.</p>
+  <h2>Complete Your Booking</h2>
+  <p>Please enter your information below.</p>
+
+  <h3>Parent / Guardian Information</h3>
 
   <div class="form-group">
-    <label for="customerName">Full Name</label>
+    <label for="customerName">Full Name *</label>
     <input
       id="customerName"
       v-model="customerName"
@@ -183,7 +205,17 @@ const sortedLessons = computed(() => {
   </div>
 
   <div class="form-group">
-    <label for="customerPhone">Phone Number</label>
+    <label for="customerEmail">Email Address *</label>
+    <input
+      id="customerEmail"
+      v-model="customerEmail"
+      type="email"
+      placeholder="example@email.com"
+    />
+  </div>
+
+  <div class="form-group">
+    <label for="customerPhone">Phone Number *</label>
     <input
       id="customerPhone"
       v-model="customerPhone"
@@ -192,12 +224,70 @@ const sortedLessons = computed(() => {
     />
   </div>
 
+  <h3>Address Information</h3>
+
+  <div class="form-group">
+    <label for="customerAddress">Street Address *</label>
+    <input
+      id="customerAddress"
+      v-model="customerAddress"
+      type="text"
+      placeholder="House number and street name"
+    />
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="customerCity">City / Location *</label>
+      <input
+        id="customerCity"
+        v-model="customerCity"
+        type="text"
+        placeholder="Enter your city"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="customerPostcode">Postcode *</label>
+      <input
+        id="customerPostcode"
+        v-model="customerPostcode"
+        type="text"
+        placeholder="Enter postcode"
+      />
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="customerCountry">Country *</label>
+    <select id="customerCountry" v-model="customerCountry">
+      <option value="United Kingdom">United Kingdom</option>
+      <option value="United Arab Emirates">
+        United Arab Emirates
+      </option>
+      <option value="Ireland">Ireland</option>
+      <option value="Other">Other</option>
+    </select>
+  </div>
+
+  <h3>Student Information</h3>
+
+  <div class="form-group">
+    <label for="studentName">Student Full Name *</label>
+    <input
+      id="studentName"
+      v-model="studentName"
+      type="text"
+      placeholder="Enter student's full name"
+    />
+  </div>
+
   <button
     class="checkout-button"
     :disabled="!canCheckout || orderSubmitted"
     @click="checkout"
   >
-    Checkout
+    Confirm Booking
   </button>
 
   <p v-if="orderSubmitted" class="success-message">
@@ -205,6 +295,7 @@ const sortedLessons = computed(() => {
   </p>
 
 </div>
+
 
 
 </section>
@@ -486,6 +577,46 @@ body {
   background: #e8f7ef;
   color: #23745b !important;
   border-radius: 8px;
+}
+
+
+.checkout-section h3 {
+  color: #172b45;
+  font-size: 18px;
+  margin-top: 30px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-group select {
+  padding: 14px;
+  border: 1px solid #dce2e8;
+  border-radius: 8px;
+  background: white;
+  color: #172b45;
+  font-size: 15px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .checkout-section {
+    padding: 20px;
+  }
 }
 
 
