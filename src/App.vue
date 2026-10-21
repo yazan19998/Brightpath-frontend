@@ -4,42 +4,41 @@ import { ref, computed } from 'vue'
 import LessonCard from './components/lessoncard.vue'
 import { lessons as lessonData } from './data/lessons.js'
 
+// Lesson information
 const lessons = ref(lessonData)
 
-
+// Shopping cart
 const cart = ref([])
+const showCart = ref(false)
 
-
+// Customer information
 const customerName = ref('')
-const customerPhone = ref('')
-const orderSubmitted = ref(false)
-
 const customerEmail = ref('')
+const customerPhone = ref('')
 const customerAddress = ref('')
 const customerCity = ref('')
 const customerPostcode = ref('')
 const customerCountry = ref('United Kingdom')
 const studentName = ref('')
 
+// Booking status
+const orderSubmitted = ref(false)
 
-
-
-const showCart = ref(false)
-
+// Switch between lessons and cart
 function toggleCart() {
   showCart.value = !showCart.value
 }
 
-
+// Add one lesson to the cart
 function addToCart(lesson) {
   if (lesson.spaces > 0) {
     cart.value.push(lesson.id)
     lesson.spaces--
+    orderSubmitted.value = false
   }
 }
 
-
-
+// Remove one lesson from the cart
 function removeFromCart(index) {
   const lessonId = cart.value[index]
 
@@ -52,46 +51,10 @@ function removeFromCart(index) {
   }
 
   cart.value.splice(index, 1)
+  orderSubmitted.value = false
 }
 
-
-
-
-const validEmail = computed(() => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.value.trim())
-})
-
-const validAddress = computed(() => {
-  return customerAddress.value.trim() !== '' &&
-         customerCity.value.trim() !== '' &&
-         customerPostcode.value.trim() !== '' &&
-         customerCountry.value !== ''
-})
-
-const validStudent = computed(() => {
-  return /^[A-Za-z ]+$/.test(studentName.value.trim())
-})
-
-const canCheckout = computed(() => {
-  return validName.value &&
-         validPhone.value &&
-         validEmail.value &&
-         validAddress.value &&
-         validStudent.value &&
-         cart.value.length > 0
-})
-
-
-
-function checkout() {
-  if (!canCheckout.value) {
-    return
-  }
-
-  orderSubmitted.value = true
-}
-
-
+// Calculate total price
 const cartTotal = computed(() => {
   return cart.value.reduce((total, lessonId) => {
     const lesson = lessons.value.find(
@@ -102,7 +65,57 @@ const cartTotal = computed(() => {
   }, 0)
 })
 
+// Name: letters and spaces only
+const validName = computed(() => {
+  return /^[A-Za-z ]+$/.test(customerName.value.trim())
+})
 
+// Phone: numbers only
+const validPhone = computed(() => {
+  return /^[0-9]+$/.test(customerPhone.value.trim())
+})
+
+// Email validation
+const validEmail = computed(() => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+    customerEmail.value.trim()
+  )
+})
+
+// Address fields must not be empty
+const validAddress = computed(() => {
+  return customerAddress.value.trim() !== '' &&
+         customerCity.value.trim() !== '' &&
+         customerPostcode.value.trim() !== '' &&
+         customerCountry.value !== ''
+})
+
+// Student name validation
+const validStudent = computed(() => {
+  return /^[A-Za-z ]+$/.test(studentName.value.trim())
+})
+
+// Enable booking only when all fields are valid
+const canCheckout = computed(() => {
+  return validName.value &&
+         validPhone.value &&
+         validEmail.value &&
+         validAddress.value &&
+         validStudent.value &&
+         cart.value.length > 0 &&
+         !orderSubmitted.value
+})
+
+// Submit booking (front-end demonstration)
+function checkout() {
+  if (!canCheckout.value) {
+    return
+  }
+
+  orderSubmitted.value = true
+}
+
+// Sorting
 const sortBy = ref('subject')
 const sortOrder = ref('asc')
 
@@ -129,219 +142,233 @@ const sortedLessons = computed(() => {
 })
 </script>
 
-
 <template>
   <header class="header">
     <h1>BrightPath Academy</h1>
-    
-<button
-  class="cart-button"
-  :disabled="cart.length === 0 && !showCart"
-  @click="toggleCart"
->
-  {{ showCart ? 'Back to Lessons' : 'Cart (' + cart.length + ')' }}
-</button>
 
+    <button
+      type="button"
+      class="cart-button"
+      :disabled="cart.length === 0 && !showCart"
+      @click="toggleCart"
+    >
+      {{ showCart ? 'Back to Lessons' : `Cart (${cart.length})` }}
+    </button>
   </header>
 
   <main class="container">
 
-    
-<section v-if="showCart" class="cart-page">
+    <!-- SHOPPING CART PAGE -->
+    <section v-if="showCart" class="cart-page">
 
-  <h2>Your Shopping Cart</h2>
-  <p>Review your selected lessons below.</p>
+      <h2>Your Shopping Cart</h2>
+      <p>Review your selected lessons below.</p>
 
-  <div v-if="cart.length === 0">
-    <p>Your cart is empty.</p>
-  </div>
+      <div v-if="cart.length === 0">
+        <p>Your cart is empty.</p>
+      </div>
 
-  <div
-    v-for="(lessonId, index) in cart"
-    :key="index"
-    class="cart-item"
-  >
-    <div v-if="lessons.find(lesson => lesson.id === lessonId)">
-      <h3>
-        {{ lessons.find(lesson => lesson.id === lessonId).subject }}
-      </h3>
+      <div
+        v-for="(lessonId, index) in cart"
+        :key="index"
+        class="cart-item"
+      >
+        <div v-if="lessons.find(lesson => lesson.id === lessonId)">
+          <h3>
+            {{ lessons.find(lesson => lesson.id === lessonId).subject }}
+          </h3>
 
-      <p>
-        {{ lessons.find(lesson => lesson.id === lessonId).location }}
-      </p>
+          <p>
+            {{ lessons.find(lesson => lesson.id === lessonId).location }}
+          </p>
 
-      <strong>
-        £{{ lessons.find(lesson => lesson.id === lessonId).price }}
-      </strong>
-    </div>
+          <strong>
+            £{{ lessons.find(lesson => lesson.id === lessonId).price }}
+          </strong>
+        </div>
 
-    <button class="remove-button" @click="removeFromCart(index)">
-      Remove
-    </button>
-  </div>
+        <button
+          class="remove-button"
+          :disabled="orderSubmitted"
+          @click="removeFromCart(index)"
+        >
+          Remove
+        </button>
+      </div>
 
-  <div class="cart-total">
-    <h3>Total</h3>
-    <h2>£{{ cartTotal }}</h2>
-  </div>
+      <div class="cart-total">
+        <h3>Total</h3>
+        <h2>£{{ cartTotal }}</h2>
+      </div>
 
-  
+      <!-- CHECKOUT SECTION -->
+      <div class="checkout-section">
 
-<div class="checkout-section">
+        <h2>Complete Your Booking</h2>
+        <p>Please enter your information below.</p>
 
-  <h2>Complete Your Booking</h2>
-  <p>Please enter your information below.</p>
+        <h3>Parent / Guardian Information</h3>
 
-  <h3>Parent / Guardian Information</h3>
+        <div class="form-group">
+          <label for="customerName">Full Name *</label>
+          <input
+            id="customerName"
+            v-model="customerName"
+            type="text"
+            placeholder="Enter your full name"
+          />
+        </div>
 
-  <div class="form-group">
-    <label for="customerName">Full Name *</label>
-    <input
-      id="customerName"
-      v-model="customerName"
-      type="text"
-      placeholder="Enter your full name"
-    />
-  </div>
+        <div class="form-group">
+          <label for="customerEmail">Email Address *</label>
+          <input
+            id="customerEmail"
+            v-model="customerEmail"
+            type="email"
+            placeholder="example@email.com"
+          />
+        </div>
 
-  <div class="form-group">
-    <label for="customerEmail">Email Address *</label>
-    <input
-      id="customerEmail"
-      v-model="customerEmail"
-      type="email"
-      placeholder="example@email.com"
-    />
-  </div>
+        <div class="form-group">
+          <label for="customerPhone">Phone Number *</label>
+          <input
+            id="customerPhone"
+            v-model="customerPhone"
+            type="tel"
+            placeholder="Enter your phone number"
+          />
+        </div>
 
-  <div class="form-group">
-    <label for="customerPhone">Phone Number *</label>
-    <input
-      id="customerPhone"
-      v-model="customerPhone"
-      type="tel"
-      placeholder="Enter your phone number"
-    />
-  </div>
+        <h3>Address Information</h3>
 
-  <h3>Address Information</h3>
+        <div class="form-group">
+          <label for="customerAddress">Street Address *</label>
+          <input
+            id="customerAddress"
+            v-model="customerAddress"
+            type="text"
+            placeholder="House number and street name"
+          />
+        </div>
 
-  <div class="form-group">
-    <label for="customerAddress">Street Address *</label>
-    <input
-      id="customerAddress"
-      v-model="customerAddress"
-      type="text"
-      placeholder="House number and street name"
-    />
-  </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="customerCity">City / Location *</label>
+            <input
+              id="customerCity"
+              v-model="customerCity"
+              type="text"
+              placeholder="Enter your city"
+            />
+          </div>
 
-  <div class="form-row">
-    <div class="form-group">
-      <label for="customerCity">City / Location *</label>
-      <input
-        id="customerCity"
-        v-model="customerCity"
-        type="text"
-        placeholder="Enter your city"
-      />
-    </div>
+          <div class="form-group">
+            <label for="customerPostcode">Postcode *</label>
+            <input
+              id="customerPostcode"
+              v-model="customerPostcode"
+              type="text"
+              placeholder="Enter postcode"
+            />
+          </div>
+        </div>
 
-    <div class="form-group">
-      <label for="customerPostcode">Postcode *</label>
-      <input
-        id="customerPostcode"
-        v-model="customerPostcode"
-        type="text"
-        placeholder="Enter postcode"
-      />
-    </div>
-  </div>
+        <div class="form-group">
+          <label for="customerCountry">Country *</label>
+          <select
+            id="customerCountry"
+            v-model="customerCountry"
+          >
+            <option value="United Kingdom">
+              United Kingdom
+            </option>
+            <option value="United Arab Emirates">
+              United Arab Emirates
+            </option>
+            <option value="Ireland">
+              Ireland
+            </option>
+            <option value="Other">
+              Other
+            </option>
+          </select>
+        </div>
 
-  <div class="form-group">
-    <label for="customerCountry">Country *</label>
-    <select id="customerCountry" v-model="customerCountry">
-      <option value="United Kingdom">United Kingdom</option>
-      <option value="United Arab Emirates">
-        United Arab Emirates
-      </option>
-      <option value="Ireland">Ireland</option>
-      <option value="Other">Other</option>
-    </select>
-  </div>
+        <h3>Student Information</h3>
 
-  <h3>Student Information</h3>
+        <div class="form-group">
+          <label for="studentName">Student Full Name *</label>
+          <input
+            id="studentName"
+            v-model="studentName"
+            type="text"
+            placeholder="Enter student's full name"
+          />
+        </div>
 
-  <div class="form-group">
-    <label for="studentName">Student Full Name *</label>
-    <input
-      id="studentName"
-      v-model="studentName"
-      type="text"
-      placeholder="Enter student's full name"
-    />
-  </div>
+        <button
+          type="button"
+          class="checkout-button"
+          :disabled="!canCheckout"
+          @click="checkout"
+        >
+          {{ orderSubmitted ? 'Booking Submitted' : 'Confirm Booking' }}
+        </button>
 
-  <button
-    class="checkout-button"
-    :disabled="!canCheckout || orderSubmitted"
-    @click="checkout"
-  >
-    Confirm Booking
-  </button>
+        <p
+          v-if="orderSubmitted"
+          class="success-message"
+          role="status"
+        >
+          Your booking has been submitted successfully!
+          
+        </p>
 
-  <p v-if="orderSubmitted" class="success-message">
-    Your booking has been submitted successfully!
-  </p>
-
-</div>
-
-
-
-</section>
-
-<section v-else>
-
-    <section class="intro">
-      <p class="eyebrow">EXPLORE & LEARN</p>
-      <h2>Discover your next adventure in learning.</h2>
-      <p>Find exciting after-school activities for young minds.</p>
+      </div>
     </section>
 
-    <h2>Explore Our Lessons</h2>
+    <!-- LESSON CATALOGUE -->
+    <section v-else>
 
-    
-<div class="sort-controls">
-  <label for="sortBy">Sort by:</label>
+      <section class="intro">
+        <p class="eyebrow">EXPLORE & LEARN</p>
+        <h2>Discover your next adventure in learning.</h2>
+        <p>
+          Find exciting after-school activities for young minds.
+        </p>
+      </section>
 
-  <select id="sortBy" v-model="sortBy">
-    <option value="subject">Subject</option>
-    <option value="location">Location</option>
-    <option value="price">Price</option>
-    <option value="spaces">Available Spaces</option>
-  </select>
+      <h2>Explore Our Lessons</h2>
 
-  <select v-model="sortOrder" aria-label="Sort direction">
-    <option value="asc">Ascending</option>
-    <option value="desc">Descending</option>
-  </select>
-</div>
+      <div class="sort-controls">
+        <label for="sortBy">Sort by:</label>
 
+        <select id="sortBy" v-model="sortBy">
+          <option value="subject">Subject</option>
+          <option value="location">Location</option>
+          <option value="price">Price</option>
+          <option value="spaces">Available Spaces</option>
+        </select>
 
+        <select
+          v-model="sortOrder"
+          aria-label="Sort direction"
+        >
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
+      </div>
 
-<div class="lesson-grid">
-  <LessonCard
-    v-for="lesson in sortedLessons"
-    :key="lesson.id"
-    :lesson="lesson"
-    @add-to-cart="addToCart"
-  />
-</div>
+      <div class="lesson-grid">
+        <LessonCard
+          v-for="lesson in sortedLessons"
+          :key="lesson.id"
+          :lesson="lesson"
+          @add-to-cart="addToCart"
+        />
+      </div>
 
-
-</section>
-
-
+    </section>
   </main>
 </template>
 
@@ -364,6 +391,10 @@ body {
   padding: 20px 8%;
   background: white;
   border-bottom: 1px solid #e5e7eb;
+}
+
+.header h1 {
+  font-size: 22px;
 }
 
 .container {
@@ -398,19 +429,6 @@ body {
   margin-top: 25px;
 }
 
-@media (max-width: 800px) {
-  .lesson-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 550px) {
-  .lesson-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-
 .sort-controls {
   display: flex;
   align-items: center;
@@ -421,7 +439,6 @@ body {
 
 .sort-controls label {
   font-weight: bold;
-  color: #172b45;
 }
 
 .sort-controls select {
@@ -437,7 +454,6 @@ body {
 .sort-controls select:focus {
   outline: 2px solid #c57835;
 }
-
 
 .cart-button {
   background: #172b45;
@@ -500,6 +516,11 @@ body {
   background: #ffe0d9;
 }
 
+.remove-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .cart-total {
   display: flex;
   justify-content: space-between;
@@ -508,13 +529,6 @@ body {
   padding: 20px 0;
   border-top: 1px solid #dce2e8;
 }
-
-@media (max-width: 550px) {
-  .cart-item {
-    flex-wrap: wrap;
-  }
-}
-
 
 .checkout-section {
   background: white;
@@ -526,11 +540,19 @@ body {
 
 .checkout-section h2 {
   margin-top: 0;
-  color: #172b45;
 }
 
-.checkout-section p {
+.checkout-section > p {
   color: #64748b;
+}
+
+.checkout-section h3 {
+  color: #172b45;
+  font-size: 18px;
+  margin-top: 30px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e8e8e8;
 }
 
 .form-group {
@@ -544,15 +566,26 @@ body {
   margin-bottom: 8px;
 }
 
-.form-group input {
+.form-group input,
+.form-group select {
+  width: 100%;
   padding: 14px;
   border: 1px solid #dce2e8;
   border-radius: 8px;
   font-size: 15px;
+  background: white;
+  color: #172b45;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group select:focus {
   outline: 2px solid #c57835;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
 .checkout-button {
@@ -579,46 +612,31 @@ body {
   border-radius: 8px;
 }
 
-
-.checkout-section h3 {
-  color: #172b45;
-  font-size: 18px;
-  margin-top: 30px;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e8e8e8;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.form-group select {
-  padding: 14px;
-  border: 1px solid #dce2e8;
-  border-radius: 8px;
-  background: white;
-  color: #172b45;
-  font-size: 15px;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
+@media (max-width: 800px) {
+  .lesson-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 600px) {
+  .lesson-grid {
+    grid-template-columns: 1fr;
+  }
+
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .cart-item {
+    flex-wrap: wrap;
   }
 
   .checkout-section {
     padding: 20px;
   }
+
+  .header {
+    padding: 16px 5%;
+  }
 }
-
-
-
 </style>
