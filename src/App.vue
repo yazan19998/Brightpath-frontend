@@ -9,12 +9,48 @@ const lessons = ref(lessonData)
 
 const cart = ref([])
 
+
+const showCart = ref(false)
+
+function toggleCart() {
+  showCart.value = !showCart.value
+}
+
+
 function addToCart(lesson) {
   if (lesson.spaces > 0) {
     cart.value.push(lesson.id)
     lesson.spaces--
   }
 }
+
+
+
+function removeFromCart(index) {
+  const lessonId = cart.value[index]
+
+  const lesson = lessons.value.find(
+    lesson => lesson.id === lessonId
+  )
+
+  if (lesson) {
+    lesson.spaces++
+  }
+
+  cart.value.splice(index, 1)
+}
+
+
+
+const cartTotal = computed(() => {
+  return cart.value.reduce((total, lessonId) => {
+    const lesson = lessons.value.find(
+      lesson => lesson.id === lessonId
+    )
+
+    return total + (lesson ? lesson.price : 0)
+  }, 0)
+})
 
 
 const sortBy = ref('subject')
@@ -47,10 +83,62 @@ const sortedLessons = computed(() => {
 <template>
   <header class="header">
     <h1>BrightPath Academy</h1>
-    <span>Cart ({{ cart.length }})</span>
+    
+<button
+  class="cart-button"
+  :disabled="cart.length === 0 && !showCart"
+  @click="toggleCart"
+>
+  {{ showCart ? 'Back to Lessons' : 'Cart (' + cart.length + ')' }}
+</button>
+
   </header>
 
   <main class="container">
+
+    
+<section v-if="showCart" class="cart-page">
+
+  <h2>Your Shopping Cart</h2>
+  <p>Review your selected lessons below.</p>
+
+  <div v-if="cart.length === 0">
+    <p>Your cart is empty.</p>
+  </div>
+
+  <div
+    v-for="(lessonId, index) in cart"
+    :key="index"
+    class="cart-item"
+  >
+    <div v-if="lessons.find(lesson => lesson.id === lessonId)">
+      <h3>
+        {{ lessons.find(lesson => lesson.id === lessonId).subject }}
+      </h3>
+
+      <p>
+        {{ lessons.find(lesson => lesson.id === lessonId).location }}
+      </p>
+
+      <strong>
+        £{{ lessons.find(lesson => lesson.id === lessonId).price }}
+      </strong>
+    </div>
+
+    <button class="remove-button" @click="removeFromCart(index)">
+      Remove
+    </button>
+  </div>
+
+  <div class="cart-total">
+    <h3>Total</h3>
+    <h2>£{{ cartTotal }}</h2>
+  </div>
+
+</section>
+
+<section v-else>
+
     <section class="intro">
       <p class="eyebrow">EXPLORE & LEARN</p>
       <h2>Discover your next adventure in learning.</h2>
@@ -88,16 +176,7 @@ const sortedLessons = computed(() => {
 </div>
 
 
-    
-
-<div class="lesson-grid">
-  <LessonCard
-    v-for="lesson in sortedLessons"
-    :key="lesson.id"
-    :lesson="lesson"
-    @add-to-cart="addToCart"
-  />
-</div>
+</section>
 
 
   </main>
@@ -194,6 +273,83 @@ body {
 
 .sort-controls select:focus {
   outline: 2px solid #c57835;
+}
+
+
+.cart-button {
+  background: #172b45;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cart-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cart-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.cart-page h2 {
+  color: #172b45;
+}
+
+.cart-page > p {
+  color: #64748b;
+  margin-bottom: 30px;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: white;
+  padding: 22px;
+  margin-bottom: 15px;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+}
+
+.cart-item h3 {
+  margin: 0 0 8px;
+}
+
+.cart-item p {
+  color: #64748b;
+}
+
+.remove-button {
+  background: #fff0ed;
+  color: #bc4235;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.remove-button:hover {
+  background: #ffe0d9;
+}
+
+.cart-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 25px;
+  padding: 20px 0;
+  border-top: 1px solid #dce2e8;
+}
+
+@media (max-width: 550px) {
+  .cart-item {
+    flex-wrap: wrap;
+  }
 }
 
 
