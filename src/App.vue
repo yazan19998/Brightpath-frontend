@@ -10,6 +10,12 @@ const lessons = ref(lessonData)
 const cart = ref([])
 
 
+const customerName = ref('')
+const customerPhone = ref('')
+const orderSubmitted = ref(false)
+
+
+
 const showCart = ref(false)
 
 function toggleCart() {
@@ -40,6 +46,31 @@ function removeFromCart(index) {
   cart.value.splice(index, 1)
 }
 
+
+
+const validName = computed(() => {
+  return /^[A-Za-z ]+$/.test(customerName.value.trim())
+})
+
+const validPhone = computed(() => {
+  return /^[0-9]+$/.test(customerPhone.value)
+})
+
+const canCheckout = computed(() => {
+  return validName.value &&
+         validPhone.value &&
+         cart.value.length > 0
+})
+
+
+
+function checkout() {
+  if (!canCheckout.value) {
+    return
+  }
+
+  orderSubmitted.value = true
+}
 
 
 const cartTotal = computed(() => {
@@ -134,6 +165,47 @@ const sortedLessons = computed(() => {
     <h3>Total</h3>
     <h2>£{{ cartTotal }}</h2>
   </div>
+
+  
+<div class="checkout-section">
+
+  <h2>Checkout</h2>
+  <p>Enter your details to complete your booking.</p>
+
+  <div class="form-group">
+    <label for="customerName">Full Name</label>
+    <input
+      id="customerName"
+      v-model="customerName"
+      type="text"
+      placeholder="Enter your full name"
+    />
+  </div>
+
+  <div class="form-group">
+    <label for="customerPhone">Phone Number</label>
+    <input
+      id="customerPhone"
+      v-model="customerPhone"
+      type="tel"
+      placeholder="Enter your phone number"
+    />
+  </div>
+
+  <button
+    class="checkout-button"
+    :disabled="!canCheckout || orderSubmitted"
+    @click="checkout"
+  >
+    Checkout
+  </button>
+
+  <p v-if="orderSubmitted" class="success-message">
+    Your booking has been submitted successfully!
+  </p>
+
+</div>
+
 
 </section>
 
@@ -351,6 +423,71 @@ body {
     flex-wrap: wrap;
   }
 }
+
+
+.checkout-section {
+  background: white;
+  padding: 30px;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+  margin-top: 30px;
+}
+
+.checkout-section h2 {
+  margin-top: 0;
+  color: #172b45;
+}
+
+.checkout-section p {
+  color: #64748b;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.form-group input {
+  padding: 14px;
+  border: 1px solid #dce2e8;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.form-group input:focus {
+  outline: 2px solid #c57835;
+}
+
+.checkout-button {
+  width: 100%;
+  background: #172b45;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 15px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.checkout-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.success-message {
+  margin-top: 20px;
+  padding: 15px;
+  background: #e8f7ef;
+  color: #23745b !important;
+  border-radius: 8px;
+}
+
 
 
 </style>
