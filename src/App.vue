@@ -1,16 +1,17 @@
+
 <script setup>
 import { ref, computed } from 'vue'
 import LessonCard from './components/lessoncard.vue'
 import { lessons as lessonData } from './data/lessons.js'
 
-// Lesson information
+// LESSON INFORMATION
 const lessons = ref(lessonData)
 
-// Shopping cart
+// SHOPPING CART
 const cart = ref([])
 const showCart = ref(false)
 
-// Customer information
+// CUSTOMER INFORMATION
 const customerName = ref('')
 const customerEmail = ref('')
 const customerPhone = ref('')
@@ -20,7 +21,7 @@ const customerPostcode = ref('')
 const customerCountry = ref('United Kingdom')
 const studentName = ref('')
 
-// Booking status
+// BOOKING STATUS
 const orderSubmitted = ref(false)
 
 // Switch between lessons and cart
@@ -28,7 +29,7 @@ function toggleCart() {
   showCart.value = !showCart.value
 }
 
-// Add one lesson to the cart
+// Add a lesson to the cart
 function addToCart(lesson) {
   if (lesson.spaces > 0) {
     cart.value.push(lesson.id)
@@ -37,7 +38,7 @@ function addToCart(lesson) {
   }
 }
 
-// Remove one lesson from the cart
+// Remove a lesson from the cart
 function removeFromCart(index) {
   const lessonId = cart.value[index]
 
@@ -53,7 +54,7 @@ function removeFromCart(index) {
   orderSubmitted.value = false
 }
 
-// Calculate total price
+// Calculate the cart total
 const cartTotal = computed(() => {
   return cart.value.reduce((total, lessonId) => {
     const lesson = lessons.value.find(
@@ -63,6 +64,8 @@ const cartTotal = computed(() => {
     return total + (lesson ? lesson.price : 0)
   }, 0)
 })
+
+// CHECKOUT VALIDATION
 
 // Name: letters and spaces only
 const validName = computed(() => {
@@ -94,7 +97,7 @@ const validStudent = computed(() => {
   return /^[A-Za-z ]+$/.test(studentName.value.trim())
 })
 
-// Enable booking only when all fields are valid
+// Enable checkout when all information is valid
 const canCheckout = computed(() => {
   return validName.value &&
          validPhone.value &&
@@ -114,12 +117,28 @@ function checkout() {
   orderSubmitted.value = true
 }
 
-// Sorting
+// SEARCH AND SORTING
+
 const sortBy = ref('subject')
 const sortOrder = ref('asc')
+const searchText = ref('')
 
+// Filter and sort lessons
 const sortedLessons = computed(() => {
-  return [...lessons.value].sort((a, b) => {
+  const search = searchText.value.toLowerCase().trim()
+
+  // First, filter lessons based on the search
+  const filtered = lessons.value.filter(lesson => {
+    return (
+      lesson.subject.toLowerCase().includes(search) ||
+      lesson.location.toLowerCase().includes(search) ||
+      String(lesson.price).includes(search) ||
+      String(lesson.spaces).includes(search)
+    )
+  })
+
+  // Then sort the filtered lessons
+  return [...filtered].sort((a, b) => {
     let first = a[sortBy.value]
     let second = b[sortBy.value]
 
@@ -142,6 +161,7 @@ const sortedLessons = computed(() => {
 </script>
 
 <template>
+  <!-- HEADER -->
   <header class="header">
     <h1>BrightPath Academy</h1>
 
@@ -167,6 +187,7 @@ const sortedLessons = computed(() => {
         <p>Your cart is empty.</p>
       </div>
 
+      <!-- CART ITEMS -->
       <div
         v-for="(lessonId, index) in cart"
         :key="index"
@@ -187,6 +208,7 @@ const sortedLessons = computed(() => {
         </div>
 
         <button
+          type="button"
           class="remove-button"
           :disabled="orderSubmitted"
           @click="removeFromCart(index)"
@@ -195,17 +217,19 @@ const sortedLessons = computed(() => {
         </button>
       </div>
 
+      <!-- CART TOTAL -->
       <div class="cart-total">
         <h3>Total</h3>
         <h2>£{{ cartTotal }}</h2>
       </div>
 
-      <!-- CHECKOUT SECTION -->
+      <!-- CHECKOUT FORM -->
       <div class="checkout-section">
 
         <h2>Complete Your Booking</h2>
         <p>Please enter your information below.</p>
 
+        <!-- PARENT INFORMATION -->
         <h3>Parent / Guardian Information</h3>
 
         <div class="form-group">
@@ -238,6 +262,7 @@ const sortedLessons = computed(() => {
           />
         </div>
 
+        <!-- ADDRESS INFORMATION -->
         <h3>Address Information</h3>
 
         <div class="form-group">
@@ -293,6 +318,7 @@ const sortedLessons = computed(() => {
           </select>
         </div>
 
+        <!-- STUDENT INFORMATION -->
         <h3>Student Information</h3>
 
         <div class="form-group">
@@ -305,6 +331,7 @@ const sortedLessons = computed(() => {
           />
         </div>
 
+        <!-- CONFIRM BOOKING -->
         <button
           type="button"
           class="checkout-button"
@@ -319,8 +346,8 @@ const sortedLessons = computed(() => {
           class="success-message"
           role="status"
         >
-          Your booking has been submitted successfully!
-          
+          Booking confirmed in this demo!
+          Your details have not yet been saved to a database.
         </p>
 
       </div>
@@ -329,9 +356,12 @@ const sortedLessons = computed(() => {
     <!-- LESSON CATALOGUE -->
     <section v-else>
 
+      <!-- INTRO -->
       <section class="intro">
         <p class="eyebrow">EXPLORE & LEARN</p>
+
         <h2>Discover your next adventure in learning.</h2>
+
         <p>
           Find exciting after-school activities for young minds.
         </p>
@@ -339,6 +369,24 @@ const sortedLessons = computed(() => {
 
       <h2>Explore Our Lessons</h2>
 
+      <!-- SEARCH BAR -->
+      <div class="search-box">
+        <span class="search-icon">⌕</span>
+
+        <input
+          v-model="searchText"
+          type="search"
+          placeholder="Search lessons, locations, prices..."
+          aria-label="Search lessons"
+        />
+      </div>
+
+      <!-- SEARCH RESULTS COUNT -->
+      <p class="results-count">
+        Showing {{ sortedLessons.length }} lessons
+      </p>
+
+      <!-- SORTING CONTROLS -->
       <div class="sort-controls">
         <label for="sortBy">Sort by:</label>
 
@@ -358,6 +406,22 @@ const sortedLessons = computed(() => {
         </select>
       </div>
 
+      <!-- NO SEARCH RESULTS -->
+      <div
+        v-if="sortedLessons.length === 0"
+        class="no-results"
+      >
+        <p>No lessons found.</p>
+
+        <button
+          type="button"
+          @click="searchText = ''"
+        >
+          Clear Search
+        </button>
+      </div>
+
+      <!-- LESSON CARDS -->
       <div class="lesson-grid">
         <LessonCard
           v-for="lesson in sortedLessons"
@@ -368,6 +432,7 @@ const sortedLessons = computed(() => {
       </div>
 
     </section>
+
   </main>
 </template>
 
@@ -383,10 +448,13 @@ body {
   color: #172b45;
 }
 
+/* HEADER */
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 15px;
   padding: 20px 8%;
   background: white;
   border-bottom: 1px solid #e5e7eb;
@@ -395,6 +463,8 @@ body {
 .header h1 {
   font-size: 22px;
 }
+
+/* MAIN LAYOUT */
 
 .container {
   max-width: 1100px;
@@ -421,12 +491,78 @@ body {
   color: #64748b;
 }
 
+/* LESSON GRID */
+
 .lesson-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
   margin-top: 25px;
 }
+
+/* SEARCH BAR */
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border: 1px solid #dce2e8;
+  border-radius: 12px;
+  padding: 0 16px;
+  margin-top: 25px;
+}
+
+.search-box:focus-within {
+  border-color: #c57835;
+}
+
+.search-icon {
+  font-size: 26px;
+  color: #64748b;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 17px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #172b45;
+  font-size: 15px;
+}
+
+.results-count {
+  margin-top: 14px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* NO SEARCH RESULTS */
+
+.no-results {
+  text-align: center;
+  padding: 45px 20px;
+  background: white;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
+.no-results p {
+  color: #64748b;
+  font-size: 17px;
+}
+
+.no-results button {
+  background: #172b45;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* SORTING */
 
 .sort-controls {
   display: flex;
@@ -454,6 +590,8 @@ body {
   outline: 2px solid #c57835;
 }
 
+/* CART BUTTON */
+
 .cart-button {
   background: #172b45;
   color: white;
@@ -468,6 +606,8 @@ body {
   cursor: not-allowed;
 }
 
+/* CART PAGE */
+
 .cart-page {
   max-width: 800px;
   margin: 0 auto;
@@ -481,6 +621,8 @@ body {
   color: #64748b;
   margin-bottom: 30px;
 }
+
+/* CART ITEMS */
 
 .cart-item {
   display: flex;
@@ -502,6 +644,8 @@ body {
   color: #64748b;
 }
 
+/* REMOVE BUTTON */
+
 .remove-button {
   background: #fff0ed;
   color: #bc4235;
@@ -520,6 +664,8 @@ body {
   cursor: not-allowed;
 }
 
+/* CART TOTAL */
+
 .cart-total {
   display: flex;
   justify-content: space-between;
@@ -528,6 +674,8 @@ body {
   padding: 20px 0;
   border-top: 1px solid #dce2e8;
 }
+
+/* CHECKOUT FORM */
 
 .checkout-section {
   background: white;
@@ -553,6 +701,8 @@ body {
   padding-bottom: 10px;
   border-bottom: 1px solid #e8e8e8;
 }
+
+/* FORM FIELDS */
 
 .form-group {
   display: flex;
@@ -587,6 +737,8 @@ body {
   gap: 20px;
 }
 
+/* CHECKOUT BUTTON */
+
 .checkout-button {
   width: 100%;
   background: #172b45;
@@ -603,6 +755,8 @@ body {
   cursor: not-allowed;
 }
 
+/* CONFIRMATION MESSAGE */
+
 .success-message {
   margin-top: 20px;
   padding: 15px;
@@ -610,6 +764,8 @@ body {
   color: #23745b !important;
   border-radius: 8px;
 }
+
+/* RESPONSIVE DESIGN */
 
 @media (max-width: 800px) {
   .lesson-grid {
